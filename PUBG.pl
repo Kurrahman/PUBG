@@ -158,9 +158,32 @@ input(map) :- tulisbaris(10).
 
 input(e) :- 
     posisi(player,X,Y),
+    posisi(enemy,X,Y),
+    input(attack),
     retract(posisi(player,X,Y)),
     N is Y + 1,
     assertz(posisi(player,X,N)),
+    player(_,_,_,_,A,K),
+    Nw is A+K,
+    jalanenemy(Nw)
+    . 
+input(e) :- 
+    posisi(player,X,Y),
+    retract(posisi(player,X,Y)),
+    N is Y + 1,
+    assertz(posisi(player,X,N)),
+    player(_,_,_,_,A,K),
+    Nw is A+K,
+    jalanenemy(Nw)
+    . 
+
+input(n) :- 
+    posisi(player,X,Y),
+    posisi(enemy,X,Y),
+    input(attack),
+    retract(posisi(player,X,Y)),
+    E is X + 1,
+    assertz(posisi(player,E,Y)),
     player(_,_,_,_,A,K),
     Nw is A+K,
     jalanenemy(Nw)
@@ -174,11 +197,35 @@ input(n) :-
     Nw is A+K,
     jalanenemy(Nw)
     . 
+
+input(s) :-
+    posisi(player,X,Y),
+    posisi(enemy,X,Y),
+    input(attack),
+    retract(posisi(player,X,Y)),
+    W is X - 1,
+    assertz(posisi(player,W,Y)),
+    player(_,_,_,_,A,K),
+    Nw is A+K,
+    jalanenemy(Nw)
+    . 
 input(s) :-
     posisi(player,X,Y),
     retract(posisi(player,X,Y)),
     W is X - 1,
     assertz(posisi(player,W,Y)),
+    player(_,_,_,_,A,K),
+    Nw is A+K,
+    jalanenemy(Nw)
+    . 
+
+input(w) :- 
+    posisi(player,X,Y),
+    posisi(enemy,X,Y),
+    input(attack),
+    retract(posisi(player,X,Y)),
+    S is Y - 1,
+    assertz(posisi(player,X,S)),
     player(_,_,_,_,A,K),
     Nw is A+K,
     jalanenemy(Nw)
@@ -208,6 +255,198 @@ input(start) :-
     initSh(S),
     random(10, 20, A),
     initAm(A).
+
+input(attack):-
+	posisi(player,X,Y),
+	\+posisi(enemy,X,Y),
+	write('Tidak ada enemy di wilayah anda !\n')
+    .
+
+input(attack) :-
+	player(Hp,Ar,We,Am,En,Ki),
+	We == none,
+	Ar > 0,
+	posisi(player,X,Y),
+	enemy(_,X,Y,S),
+    weapon(S,D),
+    ArB is Ar - D,
+    ArB > 0,
+	retract(player(Hp,Ar,We,Am,En,Ki)),
+	assertz(player(Hp,ArB,We,Am,En,Ki)),
+	write('Anda terkena serangan, HP musuh masih penuh\n'),!
+    .
+
+input(attack) :-
+	player(Hp,Ar,We,Am,En,Ki),
+	We == none,
+	Ar > 0,
+	posisi(player,X,Y),
+	enemy(_,X,Y,S),
+	weapon(S,D),
+	ArB is Ar - D,
+	ArB =< 0,
+	HpB is Hp + ArB,
+    ArB is 0,
+    HpB > 0,
+	retract(player(Hp,Ar,We,Am,En,Ki)),
+	assertz(player(HpB,ArB,We,Am,En,Ki)),
+	write('Anda terkena serangan, HP musuh masih penuh\n'),!
+    .
+
+input(attack) :-
+	player(Hp,Ar,We,Am,En,Ki),
+	We == none,
+	Ar > 0,
+	posisi(player,X,Y),
+	enemy(_,X,Y,S),
+	weapon(S,D),
+	ArB is Ar - D,
+	ArB =< 0,
+    HpB is Hp + ArB,
+    ArB is 0,
+    HpB =< 0,
+	retract(player(Hp,Ar,We,Am,En,Ki)),
+	assertz(player(HpB,ArB,We,Am,En,Ki)),
+    write('YOU DIED !\n'),!
+    .
+
+input(attack) :-
+	player(Hp,Ar,We,Am,En,Ki),
+	We == none,
+	Ar =:= 0,
+	posisi(player,X,Y),
+	enemy(_,X,Y,S),
+	weapon(S,D),
+    HpB is Hp - D,
+    HpB > 0,
+	retract(player(Hp,Ar,We,Am,En,Ki)),
+	assertz(player(HpB,Ar,We,Am,En,Ki)),
+	write('Anda terkena serangan, HP musuh masih penuh\n'),!
+    .
+
+input(attack) :-
+	player(Hp,Ar,We,Am,En,Ki),
+	We == none,
+	Ar =:= 0,
+	posisi(player,X,Y),
+    enemy(_,X,Y,S),
+    weapon(S,D),
+    HpB is Hp - D,
+    HpB =< 0, 
+    HpB is 0,
+	retract(player(Hp,Ar,We,Am,En,Ki)),
+	assertz(player(HpB,Ar,We,Am,En,Ki)),
+    write('Anda terkena serangan, HP musuh masih penuh\n'),
+    write('YOU DIED\n'),!
+    .
+
+
+
+
+
+
+input(attack) :-
+	player(Hp,Ar,We,Am,En,Ki),
+	We \== none,
+	Ar > 0,
+	posisi(player,X,Y),
+	enemy(_,X,Y,S),
+	weapon(S,D),
+	EnB is En -1,
+    KiB is Ki +1,
+    ArB is Ar - D,
+    ArB > 0,
+	retract(player(Hp,Ar,We,Am,En,Ki)),
+	retract(enemy(_,X,Y,S)),
+	retract(posisi(enemy,X,Y)),
+	assertz(player(Hp,ArB,We,Am,EnB,KiB)),
+	assertz(posisi(S,X,Y)),
+    write('Anda berhasil counter attack \n'),!
+    .
+
+input(attack) :-
+	player(Hp,Ar,We,Am,En,Ki),
+	We \== none,
+	Ar > 0,
+	posisi(player,X,Y),
+	enemy(_,X,Y,S),
+	weapon(S,D),
+	EnB is En -1,
+	KiB is Ki +1,
+	ArB is Ar - D,
+    ArB =< 0,
+    HpB is Hp + ArB,
+    ArB is 0,
+    HpB > 0,
+	retract(player(Hp,Ar,We,Am,En,Ki)),
+	retract(enemy(_,X,Y,S)),
+	retract(posisi(enemy,X,Y)),
+	assertz(player(HpB,ArB,We,Am,EnB,KiB)),
+	assertz(posisi(S,X,Y)),
+    write('Anda berhasil counter attack \n'),!
+    .
+
+
+input(attack) :-
+	player(Hp,Ar,We,Am,En,Ki),
+	We \== none,
+	Ar > 0,
+	posisi(player,X,Y),
+	enemy(_,X,Y,S),
+	weapon(S,D),
+	EnB is En -1,
+	KiB is Ki +1,
+	ArB is Ar - D,
+	ArB =< 0,
+	HpB is Hp + ArB,
+    ArB is 0,
+    HpB =< 0,
+	retract(player(Hp,Ar,We,Am,En,Ki)),
+	retract(enemy(_,X,Y,S)),
+	retract(posisi(enemy,X,Y)),
+	assertz(player(HpB,ArB,We,Am,EnB,KiB)),
+    assertz(posisi(S,X,Y)),
+    write('Anda berhasil counter attack, tapi sayang sekali anda mati \n'),
+    write('YOU DIED ! \n'),!
+    .
+
+
+input(attack) :-
+	player(Hp,Ar,We,Am,En,Ki),
+	We \== none,
+	Ar =:= 0,
+	posisi(player,X,Y),
+	enemy(_,X,Y,S),
+	weapon(S,D),
+	EnB is En -1,
+	KiB is Ki +1,
+    HpB is Hp - D,
+    HpB > 0,
+	retract(player(Hp,Ar,We,Am,En,Ki)),
+	retract(enemy(_,X,Y,S)),
+	retract(posisi(enemy,X,Y)),
+	assertz(player(HpB,Ar,We,Am,EnB,KiB)),
+	assertz(posisi(S,X,Y)),
+    write('Anda berhasil counter attack \n'),!
+    .
+
+input(attack) :-
+	player(Hp,Ar,We,Am,En,Ki),
+	We \== none,
+	Ar =:= 0,
+	posisi(player,X,Y),
+    enemy(_,X,Y,S),
+    EnB is En -1,
+    KiB is Ki +1,
+    HpB is 0,
+	retract(player(Hp,Ar,We,Am,En,Ki)),
+	retract(enemy(_,X,Y,S)),
+	retract(posisi(enemy,X,Y)),
+	assertz(player(HpB,Ar,We,Am,EnB,KiB)),
+    assertz(posisi(S,X,Y)),
+    write('Anda berhasil counter attack, tapi sayang sekali anda mati \n'),
+    write('YOU DIED !'),!
+    .
 
 input(status) :- 
     player(Hp,Ar,We,Am,En,Ki),
@@ -255,104 +494,3 @@ jalanenemy(N) :-
     Nw is N - 1,
     jalanenemy(Nw).
 
-input(attack):-
-    posisi(player,X,Y),
-    \+posisi(enemy,X,Y),
-    write('Tidak ada enemy di wilayah anda !\n').
-   
-   input(attack) :-
-    player(Hp,Ar,We,Am,En,Ki),
-    We == none,
-    Ar > 0,
-    posisi(player,X,Y),
-    enemy(X,Y,S),
-    weapon(S,D),
-    EnB is En -1,
-    ArB is Ar - D,
-    ArB < 0,
-    HpB is Hp + ArB,
-    ArB is 0,
-    retract(player(Hp,Ar,We,Am,En,Ki)),
-    assertz(player(HpB,ArB,We,Am,EnB,Ki)),
-    write('Anda memukul angin, Enemy dengan gampangnya menghindari pukulan anda\n'),
-    !.
-   
-   input(attack) :-
-    player(Hp,Ar,We,Am,En,Ki),
-    We == none,
-    Ar > 0,
-    posisi(player,X,Y),
-    enemy(X,Y,S),
-    weapon(S,D),
-    ArB is Ar - D,
-    retract(player(Hp,Ar,We,Am,En,Ki)),
-    assertz(player(Hp,ArB,We,Am,En,Ki)),
-    write('Anda memukul angin, Enemy dengan gampangnya menghindari pukulan anda\n'),
-    !.
-   
-   input(attack) :-
-    player(Hp,Ar,We,Am,En,Ki),
-    We == none,
-    Ar =:= 0,
-    posisi(player,X,Y),
-    enemy(X,Y,S),
-    weapon(S,D),
-    HpB is Hp - D,
-    retract(player(Hp,Ar,We,Am,En,Ki)),
-    assertz(player(HpB,Ar,We,Am,En,Ki)),
-    write('tau diri odong, uda bugil masi mau nyerang org goblok.\n'),
-    !.
-   
-   input(attack) :-
-    player(Hp,Ar,We,Am,En,Ki),
-    We \== none,
-    Ar > 0,
-    posisi(player,X,Y),
-    enemy(X,Y,S),
-    weapon(S,D),
-    EnB is En -1,
-    KiB is Ki +1,
-    ArB is Ar - D,
-    ArB < 0,
-    HpB is Hp + ArB,
-    ArB is 0,
-    retract(player(Hp,Ar,We,Am,En,Ki)),
-    retract(enemy(X,Y,S)),
-    retract(posisi(enemy,X,Y)),
-    assertz(player(HpB,ArB,We,Am,EnB,KiB)),
-    assertz(posisi(S,X,Y)),
-    !.
-   
-   input(attack) :-
-    player(Hp,Ar,We,Am,En,Ki),
-    We \== none,
-    Ar > 0,
-    posisi(player,X,Y),
-    enemy(X,Y,S),
-    weapon(S,D),
-    EnB is En -1,
-    KiB is Ki +1,
-    ArB is Ar - D,
-    retract(player(Hp,Ar,We,Am,En,Ki)),
-    retract(enemy(X,Y,S)),
-    retract(posisi(enemy,X,Y)),
-    assertz(player(Hp,ArB,We,Am,EnB,KiB)),
-    assertz(posisi(S,X,Y)),
-    !.
-   
-   input(attack) :-
-    player(Hp,Ar,We,Am,En,Ki),
-    We \== none,
-    Ar =:= 0,
-    posisi(player,X,Y),
-    enemy(X,Y,S),
-    weapon(S,D),
-    EnB is En -1,
-    KiB is Ki +1,
-    HpB is Hp - D,
-    retract(player(Hp,Ar,We,Am,En,Ki)),
-    retract(enemy(X,Y,S)),
-    retract(posisi(enemy,X,Y)),
-    assertz(player(HpB,Ar,We,Am,EnB,KiB)),
-    assertz(posisi(S,X,Y)),
-    !.
